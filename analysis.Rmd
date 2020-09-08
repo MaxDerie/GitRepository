@@ -1,0 +1,60 @@
+---
+title: "Analysis Covid in Belgium"
+author: "Max Derie"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: flatly
+    highlight: zenburn
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+    code_folding: show
+---
+
+```{r load-libraries, include=FALSE}
+library(tidyverse)  # Load ggplot2, dplyr, and all the other tidyverse packages
+library(mosaic)
+library(ggthemes)
+library(lubridate)
+library(here)
+library(skimr)
+library(janitor)
+library(httr)
+library(readxl)
+```
+
+
+```{r, eval = FALSE}
+
+raw <- 
+  read_csv(here::here("covid-19-pandemic-belgium-deaths-agesexdate.csv")) %>% 
+  select(-";;;;;;;;;;;;;;;;;;;;;") #additional column that shows up
+
+glimpse(data)
+
+```
+
+
+```{r}
+data <- raw %>%
+  drop_na() %>%  
+  mutate(Date = ymd(paste(as.character(Year), as.character(Month), as.character(Day))))
+
+data <- data %>% 
+  pivot_wider(names_from = c(Region, Agegroup, Sex), values_from = Deaths, values_fill = 0) %>% #pivot wider to add missing values (need one for each combination of sex, region, age group and date)
+  pivot_longer(cols = -c(Year, Month, Day, Date), names_to = c("Region", "Agegroup", "Sex"), names_sep = "_", values_to = "Deaths") #convert back to long format
+  
+```
+
+```{r}
+
+data %>% 
+  group_by(Agegroup, Date) %>% 
+  summarise(total_deaths = sum(Deaths)) %>% 
+
+  ggplot(aes(Date, total_deaths, fill = Agegroup)) +
+  geom_area(position="stack") 
+  
+```
+

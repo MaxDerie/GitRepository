@@ -1,1 +1,1 @@
-# GitRepository
+# Repository for some of the projects I make
